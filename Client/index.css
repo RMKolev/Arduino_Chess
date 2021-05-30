@@ -1,0 +1,31 @@
+.grid-container {
+  display: grid;
+  background-color: #d6c58b;
+  justify-items: center;
+  width: 80%;
+  margin-left: 10%;
+  margin-right: 10%;
+  position: fixed;
+  height: 100%;
+  grid-template-rows: 65% 15% 5% 15%;
+}
+
+.move-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 20px;
+}
+
+.player p {
+  text-align: center;
+}
+
+.errors {
+  color: rgb(206, 18, 18);
+}
+
+body {
+  margin: 0;
+  background-image: url("chess-board.jpg");
+}
+
