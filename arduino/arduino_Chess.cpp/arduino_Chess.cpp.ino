@@ -29,10 +29,13 @@ void GoTo (int index)
   //BASE ROTATION
   double baseRotation = atan((tanAlpha*(2*row+1)+8)/tanAlpha*(7 - column));
   components[BASE].write(90-baseRotation);
+  Serial.println(90-baseRotation);
 }
 
 
 void setup() {
+  Serial.begin(9600);
+
   tanAlpha = tan(ALPHA);
   // put your setup code here, to run once:
   for(int i=0;i<6;++i)
