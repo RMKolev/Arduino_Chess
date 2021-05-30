@@ -27,8 +27,8 @@ void GoTo (int index)
   int column = index%8;
   
   //BASE ROTATION
-  double baseRotation = atan((tanAlpha*(2*row+1)+8)/(tanAlpha*(7 - column)));
-  components[BASE].write(180-(baseRotation*180/M_PI));
+  double baseRotation = atan((tanAlpha*(7 - 2*column))/(tanAlpha*(2*row+1)+8));
+  components[BASE].write(90+(baseRotation*180/M_PI));
   Serial.println((baseRotation*180/M_PI));
 
   components[ARM_ROTATION_1].write(0);
