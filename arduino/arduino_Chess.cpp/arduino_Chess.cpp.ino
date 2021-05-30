@@ -3,7 +3,7 @@
 #define arm1 11.7
 #define arm2 11.3
 #define grip 12
-#define ALPHA 62.5
+#define ALPHA 1.09
 #define START_BOARD_OFFSET 30
 struct Point {
   float x;
@@ -27,9 +27,14 @@ void GoTo (int index)
   int column = index%8;
   
   //BASE ROTATION
-  double baseRotation = atan((tanAlpha*(2*row+1)+8)/tanAlpha*(7 - column));
-  components[BASE].write(90-baseRotation);
-  Serial.println(90-baseRotation);
+  double baseRotation = atan((tanAlpha*(2*row+1)+8)/(tanAlpha*(7 - column)));
+  components[BASE].write(180-(baseRotation*180/M_PI));
+  Serial.println((baseRotation*180/M_PI));
+
+  components[ARM_ROTATION_1].write(0);
+  components[ARM_ROTATION_2].write(0);
+  components[WRIST_LEFTROTATION].write(0);
+  components[WRIST_UPROTATION].write(0);
 }
 
 
@@ -46,7 +51,7 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  GoTo(0);
+  /*GoTo(0);
   delay(1000);
   GoTo(7);
   delay(1000);
@@ -54,5 +59,16 @@ void loop() {
   delay(1000);
   GoTo(63);
   delay(1000);
-  
+  */
+  //components[BASE].write(0);
+  //GoTo(0);
+  //components[BASE].write(90);
+  //
+  for(int i=0;i<64;++i){
+    GoTo(i);
+    delay(1000);
+  }
+  delay(1000);
+  //components[BASE].write(90);
+  delay(1000);
 }
