@@ -3,66 +3,152 @@
 #define arm1 11.7
 #define arm2 11.3
 #define grip 12
-#define ALPHA 0.7
-#define START_BOARD_OFFSET 30
+#define ALPHA_LOW 0.79
+#define ALPHA_HIGH 1.0
 #define DISTANCE_TO_BOARD 10.0
-#define TILE_SIZE 4.0
+#define TILE_SIZE 2.0
 
-#define A 12.0
-#define B 12.0
-#define P 1.0
-
-struct Point {
-  float x;
-  float y;
-
-  Point(float x, float y) : x(x),y(y) {};
-};
 enum componentNames {BASE = 0, ARM_ROTATION_1, ARM_ROTATION_2, WRIST_LEFTROTATION,WRIST_UPROTATION,GRIP};
 
 Servo components[6];
 
-double tanAlpha = 0.0;
+double tanAlphaLow = 0.0;
+double tanAlphaHigh = 0.0;
 
-void GetAngles(float& alpha, float& beta, float& gamma, Point endPoint)
+void writeSmooth(int endPosition, int index, int countSteps = 6) 
 {
-  //float 
+  int currentAngle = components[index].read();
+
+  float delta = (endPosition - currentAngle)/countSteps;
+  for(int i=0;i<countSteps;++i)
+  {
+    currentAngle+= delta;
+    components[index].write(currentAngle);
+    delay(100);
+  }
+  components[index].write(endPosition);
 }
-void GoTo (int index) 
-{
-  int row = index/8;
-  int column = index%8;
-  
-  //BASE ROTATION
+
+void setBaseRotation(int row, int column) {
+  double tanAlpha = tanAlphaLow + (row / 7.0) * (tanAlphaHigh - tanAlphaLow);
   double baseRotation = atan((tanAlpha*(7 - 2*column))/(tanAlpha*(2*row+1)+8));
-  components[BASE].write(90+(baseRotation*180/M_PI));
-  Serial.println((baseRotation*180/M_PI));
-
-  //ARM ROTATIONS
-  double length_to_tile_squared = pow(abs((3.5 - column) * TILE_SIZE), 2) + pow((DISTANCE_TO_BOARD + row + 0.5), 2);
-  double C = sqrt(length_to_tile_squared + P * P);
-
-  double arm_rotation_1 = (acos((A*A + C*C - B*B) / (2 * A * C)) + asin(P / C)) * 180 / M_PI;
-  double arm_rotation_2 = 180 - acos((A*A + B*B - C*C)/(2 * A * B)) * 180 / M_PI;
-  double wrist_rotation = (M_PI - acos((B*B + C*C - A*A)/(2 * B * C)) - acos(P / C)) * 180 / M_PI - 90;
-
-  components[ARM_ROTATION_1].write(arm_rotation_1);
-  components[ARM_ROTATION_2].write(arm_rotation_2);
-  components[WRIST_LEFTROTATION].write(0);
-  components[WRIST_UPROTATION].write(wrist_rotation);
-  components[GRIP].write(30);
+  writeSmooth(90 - 2 * (row / 7.0) +(baseRotation*180/M_PI),BASE, 6);
 }
 
+void setAngles(double shoulder, double elbow, double wrist) {
+  writeSmooth(wrist,WRIST_UPROTATION);
+  writeSmooth(elbow,ARM_ROTATION_2);
+  writeSmooth(shoulder,ARM_ROTATION_1);
+  writeSmooth(0,WRIST_LEFTROTATION);
+}
+
+void defaultAngles() {
+  writeSmooth(80,ARM_ROTATION_1);
+  writeSmooth(100,ARM_ROTATION_2);
+  writeSmooth(40,WRIST_UPROTATION);
+  writeSmooth(0,WRIST_LEFTROTATION);
+}
+
+double commands[8][4][3] =
+  {
+    {
+      {78, 137, 49},
+      {90, 0, 90},
+      {90, 0, 90},
+      {90, 0, 90},
+    },
+    {
+      {66, 127, 47},
+      {90, 0, 90},
+      {90, 0, 90},
+      {90, 0, 90},
+    },
+    {
+      {59, 112, 41},
+      {90, 0, 90},
+      {90, 0, 90},
+      {90, 0, 90},
+    },
+    {
+      {52, 100, 40},
+      {90, 0, 90},
+      {90, 0, 90},
+      {90, 0, 90},
+    },
+    {
+      {38, 66, 19},
+      {90, 0, 90},
+      {90, 0, 90},
+      {90, 0, 90},
+    },
+    {
+      {24, 39, 8},
+      {90, 0, 90},
+      {90, 0, 90},
+      {90, 0, 90},
+    },
+    {
+      {17, 29, 11},
+      {90, 0, 90},
+      {90, 0, 90},
+      {90, 0, 90},
+    },
+    {
+      {15, 28, 24},
+      {90, 0, 90},
+      {90, 0, 90},
+      {90, 0, 90},
+    },
+  };
+
+void applyAngles(int row, int col) {
+  int cmdCol = col;
+  if(col > 3) {
+    cmdCol = 7 - col;
+  }
+  setAngles(commands[row][cmdCol][0], commands[row][cmdCol][1], commands[row][cmdCol][2]);
+}
+
+void grab() {
+  writeSmooth(9,GRIP);
+}
+
+void ungrab() {
+  writeSmooth(40,GRIP);
+}
+
+void setPosition(int row, int col) {
+  setBaseRotation(row, col);
+  //delay(2000); 
+  applyAngles(row, col);
+  //delay(2000);
+}
+
+void makeTurn(int row0, int col0, int row, int col) {
+  setPosition(row0, col0);
+  grab();
+  
+  defaultAngles();
+  
+  setPosition(row, col);
+  ungrab();
+  
+  defaultAngles();
+}
 
 void setup() {
   Serial.begin(9600);
 
-  tanAlpha = tan(ALPHA);
+  tanAlphaLow = tan(ALPHA_LOW);
+  tanAlphaHigh = tan(ALPHA_HIGH);
   // put your setup code here, to run once:
   for(int i=0;i<6;++i)
   {
     components[i].attach(i+8);      
   }
+
+  defaultAngles();
+  delay(2000);
 }
 
 void loop() {
@@ -80,11 +166,20 @@ void loop() {
   //GoTo(0);
   //components[BASE].write(90);
   //
-  for(int i=0;i<64;++i){
-    GoTo(i);
-    delay(1000);
-  }
-  delay(1000);
-  //components[BASE].write(90);
+//  for(int i=0;i<64;++i){
+//    GoTo(i);
+//    delay(1000);
+//  }
+//  delay(1000);
+//  //components[BASE].write(90);
+//  delay(1000);
+
+//  int row = 7;
+//  makeTurn(0, 7, 7, 0);
+//  makeTurn(7, 0, 7, 7);
+//  makeTurn(7, 7, 0, 0);
+//  makeTurn(0, 0, 0, 7);
+
+  setAngles(90, 0, 90);
   delay(1000);
 }
