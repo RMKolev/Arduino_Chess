@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>COVID Friendly Chess</title>
+  <link href="index.css" rel="stylesheet">
+  <script src="index.js"></script>
+  <script src="utils.js"></script>
+</head>
+
+<body>
+  <div class="grid-container">
+    <img id="stream" src="" class="stream">
+    <div class="move">
+      <div class="player">
+        <p>Next player:</p>
+        <p id="player-on-the-move"></p>
+      </div>
+      <div class="move-grid">
+        <div>
+          <label for="start-pos">Start:</label>
+          <input type="text" id="start-pos" name="start-pos" class="input-field" size=1><br><br>
+        </div>
+        <div>
+          <label for="end-pos">End:</label>
+          <input type="text" id="end-pos" name="end-pos" class="input-field" size=1><br><br>
+        </div>
+      </div>
+    </div>
+    <div><input type="button" value="Премести" id="submit-button"><br></div>
+    <div>
+      <p id="errors" class="errors"></p>
+    </div>
+  </div>
+</body>
+
+</html>
