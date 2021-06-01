@@ -27,5 +27,6 @@
 body {
   margin: 0;
   background-image: url("chess-board.jpg");
+  font-size: large;
 }
 

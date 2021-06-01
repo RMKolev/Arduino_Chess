@@ -15,12 +15,10 @@ window.addEventListener('load', () => {
 })
 
 function setupStream(espUrl) {
-    const streamUrl = espUrl + ':81'
-
     const stream = document.getElementById('stream')
     const streamContainer = document.getElementById('stream-container')
 
-    stream.src = `${streamUrl}/stream`
+    stream.src = `${espUrl}:81/stream`
 }
 
 function setupSubmitButton(espUrl) {
@@ -44,6 +42,6 @@ function sendMove(espUrl, startPos, endPos) {
     const moveCommand = `${espUrl}/control?var=move&val=${encodedMove}`
     fetch(moveCommand).
         then(res => {
-            console.log(`Status code from command: ${moveCommand}: ${res}`)
+            console.log(`Status code from command: ${moveCommand}: ${res.status}`)
         })
 }
