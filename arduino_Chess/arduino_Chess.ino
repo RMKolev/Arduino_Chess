@@ -1,12 +1,15 @@
 #include<math.h>
 #include <Servo.h>
+#include <SoftwareSerial.h>
 #define arm1 11.7
 #define arm2 11.3
 #define grip 12
 #define ALPHA_LOW 0.79
-#define ALPHA_HIGH 1.0
+#define ALPHA_HIGH 1.02
 #define DISTANCE_TO_BOARD 10.0
 #define TILE_SIZE 2.0
+
+SoftwareSerial esp32(4, 3);
 
 enum componentNames {BASE = 0, ARM_ROTATION_1, ARM_ROTATION_2, WRIST_LEFTROTATION,WRIST_UPROTATION,GRIP};
 
@@ -32,7 +35,7 @@ void writeSmooth(int endPosition, int index, int countSteps = 6)
 void setBaseRotation(int row, int column) {
   double tanAlpha = tanAlphaLow + (row / 7.0) * (tanAlphaHigh - tanAlphaLow);
   double baseRotation = atan((tanAlpha*(7 - 2*column))/(tanAlpha*(2*row+1)+8));
-  writeSmooth(90 - 2 * (row / 7.0) +(baseRotation*180/M_PI),BASE, 6);
+  writeSmooth(88 - 3 * (row / 7.0) +(baseRotation*180/M_PI),BASE, 6);
 }
 
 void setAngles(double shoulder, double elbow, double wrist) {
@@ -51,6 +54,7 @@ void defaultAngles() {
 
 double commands[8][4][3] =
   {
+    //Row 1
     {
       {78, 137, 49},
       {90, 0, 90},
@@ -99,6 +103,7 @@ double commands[8][4][3] =
       {90, 0, 90},
       {90, 0, 90},
     },
+    //Row 2
   };
 
 void applyAngles(int row, int col) {
@@ -138,6 +143,7 @@ void makeTurn(int row0, int col0, int row, int col) {
 
 void setup() {
   Serial.begin(9600);
+  esp32.begin(38400);
 
   tanAlphaLow = tan(ALPHA_LOW);
   tanAlphaHigh = tan(ALPHA_HIGH);
@@ -173,13 +179,21 @@ void loop() {
 //  delay(1000);
 //  //components[BASE].write(90);
 //  delay(1000);
+ 
+  makeTurn(0, 7, 7, 0);
+  makeTurn(7, 0, 7, 7);
+  makeTurn(7, 7, 0, 0);
+  makeTurn(0, 0, 0, 7);
 
-//  int row = 7;
-//  makeTurn(0, 7, 7, 0);
-//  makeTurn(7, 0, 7, 7);
-//  makeTurn(7, 7, 0, 0);
-//  makeTurn(0, 0, 0, 7);
+//  int row = 0;
+//  makeTurn(row, 7, row, 0);
+//  makeTurn(row, 0, row, 7);
 
-  setAngles(90, 0, 90);
-  delay(1000);
+//  setAngles(90, 0, 90);
+//  delay(1000);
+
+//  if (esp32.available()) {
+//    Serial.println(esp32.read());
+//  }
+
 }
