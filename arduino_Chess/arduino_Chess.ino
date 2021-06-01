@@ -192,8 +192,9 @@ void loop() {
 //  setAngles(90, 0, 90);
 //  delay(1000);
 
-//  if (esp32.available()) {
-//    Serial.println(esp32.read());
-//  }
+  if (esp32.available()) {
+    Serial.println("esp32 is available");
+    Serial.println(esp32.read());
+  }
 
 }
