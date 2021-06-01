@@ -47,13 +47,11 @@ void setup() {
 
   Serial.print("Camera Ready! Use 'http://");
   Serial.print(WiFi.localIP());
-  Serial.println("' to connect/");
+  Serial.println("' to connect");
 }
 
 
 void loop(){
-//  Serial2.write("90", 2);/
-//  delay(2000);/
-//  Serial2.write("00", 2);/
-//  delay(1000);/
+  Serial2.write("90", 2);
+  delay(2000);
 }

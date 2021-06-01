@@ -6,14 +6,6 @@
 #include "fb_gfx.h"
 
 typedef struct {
-        size_t size; //number of values used for filtering
-        size_t index; //current value index
-        size_t count; //value count
-        int sum;
-        int * values; //array to be filled with values
-} ra_filter_t;
-
-typedef struct {
         httpd_req_t *req;
         size_t len;
 } jpg_chunking_t;
@@ -23,37 +15,9 @@ static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" 
 static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
-static ra_filter_t ra_filter;
 httpd_handle_t stream_httpd = NULL;
 httpd_handle_t camera_httpd = NULL;
 
-static ra_filter_t * ra_filter_init(ra_filter_t * filter, size_t sample_size){
-    memset(filter, 0, sizeof(ra_filter_t));
-
-    filter->values = (int *)malloc(sample_size * sizeof(int));
-    if(!filter->values){
-        return NULL;
-    }
-    memset(filter->values, 0, sample_size * sizeof(int));
-
-    filter->size = sample_size;
-    return filter;
-}
-
-static int ra_filter_run(ra_filter_t * filter, int value){
-    if(!filter->values){
-        return value;
-    }
-    filter->sum -= filter->values[filter->index];
-    filter->values[filter->index] = value;
-    filter->sum += filter->values[filter->index];
-    filter->index++;
-    filter->index = filter->index % filter->size;
-    if (filter->count < filter->size) {
-        filter->count++;
-    }
-    return filter->sum / filter->count;
-}
 
 static size_t jpg_encode_stream(void * arg, size_t index, const void* data, size_t len){
     jpg_chunking_t *j = (jpg_chunking_t *)arg;
@@ -142,11 +106,9 @@ static esp_err_t stream_handler(httpd_req_t *req){
         int64_t frame_time = fr_end - last_frame;
         last_frame = fr_end;
         frame_time /= 1000;
-        uint32_t avg_frame_time = ra_filter_run(&ra_filter, frame_time);
-        Serial.printf("MJPG: %uB %ums (%.1ffps), AVG: %ums (%.1ffps), %u+%u=%u\n",
+        Serial.printf("MJPG: %uB %ums (%.1ffps), %u+%u=%u\n",
             (uint32_t)(_jpg_buf_len),
             (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time,
-            avg_frame_time, 1000.0 / avg_frame_time,
             (uint32_t)ready_time, (uint32_t)encode_time, (uint32_t)process_time
         );
     }
@@ -158,7 +120,7 @@ static esp_err_t stream_handler(httpd_req_t *req){
 static int send_move(char *buf) {
     Serial2.write(buf[0]);
     Serial2.write(buf[1]);
-    return 1;
+    return 0;
 }
 
 static esp_err_t cmd_handler(httpd_req_t *req){
@@ -265,8 +227,6 @@ void startCameraServer(){
         .user_ctx  = NULL
     };
 
-
-    ra_filter_init(&ra_filter, 20);
         
     Serial.printf("Starting web server on port: '%d'\n", config.server_port);
     if (httpd_start(&camera_httpd, &config) == ESP_OK) {
