@@ -3,14 +3,13 @@ const START_POS_ID = "start-pos"
 const END_POS_ID = "end-pos"
 const ERRORS_P_ID = "errors"
 const PLAYER_ON_THE_MOVE = "player-on-the-move"
+const ESP_URL = 'http://192.168.88.222'
 
 var player = ""
 
 window.addEventListener('load', () => {
-    const espUrl = 'http://192.168.88.222'
-
-    setupStream(espUrl)
-    setupSubmitButton(espUrl)
+    setupStream(ESP_URL)
+    setupSubmitButton(ESP_URL)
     setPlayer("White", "white")
 })
 
